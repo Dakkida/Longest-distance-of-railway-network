@@ -1,5 +1,6 @@
 import random 
 import sys
+import subprocess
 import train_ticket_firster as calFister
 import train_ticket as cal
 
@@ -58,9 +59,12 @@ def main():
             f.write(f"{a}, {b}, {d}\n")
 
     print(f"駅 {n_stations} 個、路線 {len(lines)} 本を {out_path} に生成しました")
-    print("実行しますか？ (y/n): ", end="")
+    print("どのファイルを実行しますか？ (y/n): ", end="")
     if input().strip().lower() == "y":
-        print("test")
+        cal.main()
+        with open("input.txt", "r") as f:
+            result = subprocess.run(["python3", "train_ticket_firster.py"], stdin=f, capture_output=True, text=True)
+    
 
 if __name__ == "__main__":
     main()
