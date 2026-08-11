@@ -1,38 +1,11 @@
 #!/usr/bin/env python3
 """
 最長片道きっぷの旅（高速版）
-----------------------------
-駅(点)と路線(線)からなる鉄道路線網で、同じ駅を2度通らずに
-距離の合計がもっとも長くなる片道きっぷの経路を求める。
-
-「最長単純経路問題(Longest Simple Path)」は一般に NP困難だが、
-本実装では厳密解(必ず最長)を保ちつつ、総当たりより大幅に速くする
-ために次の3つの工夫を入れている。
-
-  1. 連結成分ごとに分割して解く
-     最長経路は必ず1つの連結成分の中に収まる。グラフを連結成分に
-     分けて別々に解けば、探索空間を成分サイズに縮小できる。
-
-  2. 分枝限定法（枝刈り）
-     「残りの駅をあと何個たどれても、使える辺は残り駅数本まで」で
-     あることを利用し、その成分で長い辺を上位から足した楽観的上界を
-     計算する。現在距離 + 上界 が既知の最長以下なら、その枝は捨てる。
-     上界は真の値を必ず上回る(admissible)ので、厳密解は保たれる。
-
-  3. 貪欲な初期解 + 辺を長い順に探索
-     まず貪欲法で「そこそこ長い経路」を初期解として確保し、各駅から
-     長い辺を優先して探索する。早めに良い解が見つかるほど枝刈りが効く。
-
-入力(標準入力):
-    始点ID, 終点ID, 距離        (1行1路線, カンマ区切り, 前後の空白は無視)
-
-出力(標準出力):
-    最長経路を構成する駅IDを、通る順に CRLF(\\r\\n) 区切りで出力する。
 """
 
 import sys
 from collections import defaultdict
-
+import time
 
 def parse_input(text):
     """入力テキストを無向グラフ(隣接リスト)に変換する。
@@ -200,13 +173,16 @@ def longest_path(graph, nodes):
 
 
 def main():
+    start = time.perf_counter()
     text = sys.stdin.read()
     graph, nodes = parse_input(text)
     if not nodes:
         return
     path, _dist = longest_path(graph, nodes)
     sys.stdout.write("\r\n".join(str(x) for x in path) + "\r\n")
-
+    end = time.perf_counter() #計測終了
+    print('{:.2f}'.format((end-start)/60))
+    print("test")
 
 if __name__ == "__main__":
     main()

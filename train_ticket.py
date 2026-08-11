@@ -5,6 +5,7 @@
 
 import sys
 from collections import defaultdict
+import time
 
 def input_graph(text):
     """
@@ -84,6 +85,7 @@ def longest_path(graph, nodes):
     return best_path, best_dist
 
 def main():
+    start = time.perf_counter()
     text = sys.stdin.read()
     after = input_graph(text)
     print("Input graph:")
@@ -97,7 +99,8 @@ def main():
 
     # 駅IDを通る順に CRLF 区切りで出力
     sys.stdout.write("\r\n".join(str(x) for x in path) + "\r\n")
-
+    end = time.perf_counter() #計測終了
+    print('{:.2f}'.format((end-start)/60))
 
 
 if __name__ == "__main__":
