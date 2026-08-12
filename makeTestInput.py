@@ -36,6 +36,78 @@ def run_once(text):
     dn = path_distance(gn, pn)
     return tf, tn, pf, pn, df, dn
 
+
+def draw_graph(text, path, out_image="railway_graph.png"):
+    """路線図を描画し、最長経路をハイライトして画像に保存する。
+
+    - 駅を点、路線を線として networkx グラフを構築
+    - 路線の距離を辺ラベルとして表示
+    - 最長経路の駅と路線を色付きで強調
+    (描画ライブラリは一回実行のときだけ使うので、関数内で読み込む)
+    """
+    import matplotlib
+    matplotlib.use("Agg")  # 画面表示なしでファイル保存する
+    import matplotlib.pyplot as plt
+    import networkx as nx
+
+    # 入力テキストから無向グラフを組み立てる(重複辺は距離が長い方を採用)
+    G = nx.Graph()
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        parts = line.split(",")
+        if len(parts) != 3:
+            continue
+        try:
+            u, v, d = int(parts[0]), int(parts[1]), float(parts[2])
+        except ValueError:
+            continue
+        if u == v:
+            continue
+        if G.has_edge(u, v):
+            if d > G[u][v]["weight"]:
+                G[u][v]["weight"] = d
+        else:
+            G.add_edge(u, v, weight=d)
+
+    # 最長経路に含まれる辺(無向)の集合
+    path_edges = {(min(a, b), max(a, b)) for a, b in zip(path, path[1:])}
+    path_nodes = set(path)
+
+    pos = nx.spring_layout(G, seed=42)  # 毎回同じ配置になるよう固定
+    plt.figure(figsize=(10, 8))
+
+    # 辺: 最長経路は太い橙、それ以外は細い灰色
+    edge_colors, edge_widths = [], []
+    for u, v in G.edges():
+        if (min(u, v), max(u, v)) in path_edges:
+            edge_colors.append("#D85A30")
+            edge_widths.append(3.0)
+        else:
+            edge_colors.append("#B4B2A9")
+            edge_widths.append(1.2)
+    nx.draw_networkx_edges(G, pos, edge_color=edge_colors, width=edge_widths)
+
+    # 点: 最長経路上の駅は橙、それ以外は灰色
+    node_colors = ["#F0997B" if n in path_nodes else "#D3D1C7" for n in G.nodes()]
+    nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=600,
+                           edgecolors="#333333")
+    nx.draw_networkx_labels(G, pos, font_size=12)
+
+    # 辺ラベル(距離)
+    edge_labels = {(u, v): f'{G[u][v]["weight"]:g}' for u, v in G.edges()}
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=9)
+
+    total = sum(G[a][b]["weight"] for a, b in zip(path, path[1:]))
+    plt.title("Longest one-way ticket: "
+              + " -> ".join(map(str, path)) + f"  (total {total:g})")
+    plt.axis("off")
+    plt.tight_layout()
+    plt.savefig(out_image, dpi=120)
+    plt.close()
+    return out_image
+
 def generate(n_stations, n_lines, seed=None):
     """駅 n_stations 個・路線 n_lines 本のランダムな路線リストを返す。"""
     rng = random.Random(seed)
@@ -128,6 +200,7 @@ def main():
         print("どのファイルを実行しますか？ (y/n)(firster/normal): ", end="")
         choice = input().strip().lower()
         text = open(out_path, "r").read()
+        path = None
         if choice == "y":
             t0 = time.perf_counter()
             graph, nodes = calFister.parse_input(text)
@@ -144,6 +217,11 @@ def main():
             print("train_ticket.py の出力:")
             print("\r\n".join(str(x) for x in path))
             print(f"実行時間: {elapsed:.4f} 秒")
+
+        # 路線図を描画して最長経路をハイライトした画像を保存する
+        if path is not None:
+            image_path = draw_graph(text, path)
+            print(f"路線図を {image_path} に保存しました")
 
     end = time.perf_counter() #計測終了
     print('{:.2f}'.format((end-start))) 
