@@ -5,7 +5,6 @@
 
 import sys
 from collections import defaultdict
-import time
 
 def input_graph(text):
     """
@@ -29,7 +28,8 @@ def input_graph(text):
             continue
         if u == v:
             continue
-        best[(u, v)] = d
+        # 無向辺として正規化したキーで、距離が長い方を採用する
+        # (逆向き入力で同じ辺が二重登録されるのを防ぐ)
         if u < v:
             key = (u, v)
         else:
@@ -85,22 +85,13 @@ def longest_path(graph, nodes):
     return best_path, best_dist
 
 def main():
-    start = time.perf_counter()
     text = sys.stdin.read()
-    after = input_graph(text)
-    print("Input graph:")
-    print(text)
-    print("Processed graph:")
     graph, nodes = input_graph(text)
-    print(graph)
-    print(nodes)
 
     path, _dist = longest_path(graph, nodes)
 
     # 駅IDを通る順に CRLF 区切りで出力
     sys.stdout.write("\r\n".join(str(x) for x in path) + "\r\n")
-    end = time.perf_counter() #計測終了
-    print('{:.2f}'.format((end-start)/60))
 
 
 if __name__ == "__main__":

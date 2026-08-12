@@ -5,7 +5,6 @@
 
 import sys
 from collections import defaultdict
-import time
 
 def parse_input(text):
     """入力テキストを無向グラフ(隣接リスト)に変換する。
@@ -173,16 +172,12 @@ def longest_path(graph, nodes):
 
 
 def main():
-    start = time.perf_counter()
     text = sys.stdin.read()
     graph, nodes = parse_input(text)
     if not nodes:
         return
     path, _dist = longest_path(graph, nodes)
     sys.stdout.write("\r\n".join(str(x) for x in path) + "\r\n")
-    end = time.perf_counter() #計測終了
-    print('{:.2f}'.format((end-start)/60))
-    print("test")
 
 if __name__ == "__main__":
     main()
